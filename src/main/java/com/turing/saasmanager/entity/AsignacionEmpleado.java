@@ -2,6 +2,7 @@ package com.turing.saasmanager.entity;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,9 +12,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "asignacion_empleado")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AsignacionEmpleado {
 
     @Id
@@ -21,13 +26,18 @@ public class AsignacionEmpleado {
     @Column(name = "id_asignacion")
     private Integer idAsignacion;
 
+    @NotNull(message = "La licencia es obligatoria")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_licencia", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private LicenciaSoftware licencia;
 
+    @NotBlank(message = "El correo del empleado es obligatorio")
+    @Email(message = "El formato del correo electrónico no es válido")
     @Column(name = "correo_empleado", nullable = false, length = 150)
     private String correoEmpleado;
 
+    @NotNull(message = "La fecha de asignación es obligatoria")
     @Column(name = "fecha_asignacion", nullable = false)
     private LocalDate fechaAsignacion;
 

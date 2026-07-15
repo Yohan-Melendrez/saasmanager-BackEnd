@@ -2,6 +2,7 @@ package com.turing.saasmanager.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,13 +41,13 @@ public class LicenciaSoftwareController {
     }
 
     @PostMapping
-    public ResponseEntity<LicenciaSoftware> crear(@RequestBody LicenciaSoftware licencia) {
+    public ResponseEntity<LicenciaSoftware> crear(@Valid @RequestBody LicenciaSoftware licencia) {
         LicenciaSoftware nuevaLicencia = licenciaSoftwareService.crear(licencia);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaLicencia);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LicenciaSoftware> actualizar(@PathVariable Integer id, @RequestBody LicenciaSoftware licencia) {
+    public ResponseEntity<LicenciaSoftware> actualizar(@PathVariable Integer id, @Valid @RequestBody LicenciaSoftware licencia) {
         return licenciaSoftwareService.actualizar(id, licencia)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());

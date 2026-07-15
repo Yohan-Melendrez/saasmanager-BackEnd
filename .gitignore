@@ -1,4 +1,13 @@
-HELP.md
+### Documentation & Markdown ###
+*.md
+!README.md
+
+### OS & Temp Files ###
+.DS_Store
+Thumbs.db
+*.log
+
+### Maven / Target ###
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

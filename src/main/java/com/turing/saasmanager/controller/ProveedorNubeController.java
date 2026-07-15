@@ -2,6 +2,7 @@ package com.turing.saasmanager.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,13 +41,13 @@ public class ProveedorNubeController {
     }
 
     @PostMapping
-    public ResponseEntity<ProveedorNube> crear(@RequestBody ProveedorNube proveedor) {
+    public ResponseEntity<ProveedorNube> crear(@Valid @RequestBody ProveedorNube proveedor) {
         ProveedorNube nuevoProveedor = proveedorNubeService.crear(proveedor);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProveedor);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProveedorNube> actualizar(@PathVariable Integer id, @RequestBody ProveedorNube proveedor) {
+    public ResponseEntity<ProveedorNube> actualizar(@PathVariable Integer id, @Valid @RequestBody ProveedorNube proveedor) {
         return proveedorNubeService.actualizar(id, proveedor)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());

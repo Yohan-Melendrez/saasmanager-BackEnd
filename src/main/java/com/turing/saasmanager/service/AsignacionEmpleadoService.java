@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.turing.saasmanager.entity.AsignacionEmpleado;
+import com.turing.saasmanager.entity.LicenciaSoftware;
+import com.turing.saasmanager.exception.ResourceAlreadyExistsException;
+import com.turing.saasmanager.exception.ResourceNotFoundException;
 import com.turing.saasmanager.repository.AsignacionEmpleadoRepository;
 import com.turing.saasmanager.repository.LicenciaSoftwareRepository;
 
@@ -29,41 +32,50 @@ public class AsignacionEmpleadoService {
 
     @Transactional(readOnly = true)
     public Optional<AsignacionEmpleado> obtenerPorId(Integer id) {
-        return asignacionEmpleadoRepository.findById(id);
+        AsignacionEmpleado asignacion = asignacionEmpleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("La asignación con ID " + id + " no existe."));
+        return Optional.of(asignacion);
     }
 
     @Transactional
     public AsignacionEmpleado crear(AsignacionEmpleado asignacion) {
         if (asignacion.getLicencia() != null && asignacion.getLicencia().getIdLicencia() != null) {
-            licenciaSoftwareRepository.findById(asignacion.getLicencia().getIdLicencia())
-                    .ifPresent(asignacion::setLicencia);
+            LicenciaSoftware lic = licenciaSoftwareRepository.findById(asignacion.getLicencia().getIdLicencia())
+                    .orElseThrow(() -> new ResourceNotFoundException("La licencia con ID " + asignacion.getLicencia().getIdLicencia() + " no existe."));
+            asignacion.setLicencia(lic);
+
+            if (asignacionEmpleadoRepository.existsByLicenciaIdLicenciaAndCorreoEmpleadoAndEstatusActivoTrue(
+                    lic.getIdLicencia(), asignacion.getCorreoEmpleado())) {
+                throw new ResourceAlreadyExistsException("El empleado con correo '" + asignacion.getCorreoEmpleado() + "' ya tiene asignada la licencia '" + lic.getTipoPlan() + "' de forma activa.");
+            }
+        } else {
+            throw new ResourceNotFoundException("Se requiere especificar el ID de la licencia para realizar la asignación.");
         }
         return asignacionEmpleadoRepository.save(asignacion);
     }
 
     @Transactional
     public Optional<AsignacionEmpleado> actualizar(Integer id, AsignacionEmpleado asignacionActualizada) {
-        return asignacionEmpleadoRepository.findById(id)
-                .map(asignacionExistente -> {
-                    if (asignacionActualizada.getLicencia() != null && asignacionActualizada.getLicencia().getIdLicencia() != null) {
-                        licenciaSoftwareRepository.findById(asignacionActualizada.getLicencia().getIdLicencia())
-                                .ifPresent(asignacionExistente::setLicencia);
-                    } else {
-                        asignacionExistente.setLicencia(asignacionActualizada.getLicencia());
-                    }
-                    asignacionExistente.setCorreoEmpleado(asignacionActualizada.getCorreoEmpleado());
-                    asignacionExistente.setFechaAsignacion(asignacionActualizada.getFechaAsignacion());
-                    asignacionExistente.setEstatusActivo(asignacionActualizada.getEstatusActivo());
-                    return asignacionEmpleadoRepository.save(asignacionExistente);
-                });
+        AsignacionEmpleado asignacionExistente = asignacionEmpleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("La asignación con ID " + id + " no existe."));
+
+        if (asignacionActualizada.getLicencia() != null && asignacionActualizada.getLicencia().getIdLicencia() != null) {
+            LicenciaSoftware lic = licenciaSoftwareRepository.findById(asignacionActualizada.getLicencia().getIdLicencia())
+                    .orElseThrow(() -> new ResourceNotFoundException("La licencia con ID " + asignacionActualizada.getLicencia().getIdLicencia() + " no existe."));
+            asignacionExistente.setLicencia(lic);
+        }
+        asignacionExistente.setCorreoEmpleado(asignacionActualizada.getCorreoEmpleado());
+        asignacionExistente.setFechaAsignacion(asignacionActualizada.getFechaAsignacion());
+        asignacionExistente.setEstatusActivo(asignacionActualizada.getEstatusActivo());
+        return Optional.of(asignacionEmpleadoRepository.save(asignacionExistente));
     }
 
     @Transactional
     public boolean eliminar(Integer id) {
-        if (asignacionEmpleadoRepository.existsById(id)) {
-            asignacionEmpleadoRepository.deleteById(id);
-            return true;
+        if (!asignacionEmpleadoRepository.existsById(id)) {
+            throw new ResourceNotFoundException("La asignación con ID " + id + " no existe para ser eliminada.");
         }
-        return false;
+        asignacionEmpleadoRepository.deleteById(id);
+        return true;
     }
 }

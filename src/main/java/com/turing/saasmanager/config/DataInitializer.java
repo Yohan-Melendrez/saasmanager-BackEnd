@@ -3,18 +3,20 @@ package com.turing.saasmanager.config;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.turing.saasmanager.entity.AsignacionEmpleado;
 import com.turing.saasmanager.entity.LicenciaSoftware;
 import com.turing.saasmanager.entity.ProveedorNube;
+import com.turing.saasmanager.entity.Usuario;
 import com.turing.saasmanager.repository.AsignacionEmpleadoRepository;
 import com.turing.saasmanager.repository.LicenciaSoftwareRepository;
 import com.turing.saasmanager.repository.ProveedorNubeRepository;
+import com.turing.saasmanager.repository.UsuarioRepository;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -22,18 +24,31 @@ public class DataInitializer implements CommandLineRunner {
     private final ProveedorNubeRepository proveedorRepository;
     private final LicenciaSoftwareRepository licenciaRepository;
     private final AsignacionEmpleadoRepository asignacionRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(ProveedorNubeRepository proveedorRepository,
                            LicenciaSoftwareRepository licenciaRepository,
-                           AsignacionEmpleadoRepository asignacionRepository) {
+                           AsignacionEmpleadoRepository asignacionRepository,
+                           UsuarioRepository usuarioRepository,
+                           PasswordEncoder passwordEncoder) {
         this.proveedorRepository = proveedorRepository;
         this.licenciaRepository = licenciaRepository;
         this.asignacionRepository = asignacionRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        if (usuarioRepository.count() == 0) {
+            Usuario admin = new Usuario("admin", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
+            Usuario user = new Usuario("carlos.martinez@empresa.com", passwordEncoder.encode("user123"), "ROLE_USER");
+            usuarioRepository.saveAll(Arrays.asList(admin, user));
+            System.out.println("Usuarios iniciales cargados en la base de datos (admin/admin123 y carlos.martinez@empresa.com/user123).");
+        }
+
         if (proveedorRepository.count() > 0) {
             return;
         }

@@ -2,6 +2,7 @@ package com.turing.saasmanager.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,13 +41,13 @@ public class AsignacionEmpleadoController {
     }
 
     @PostMapping
-    public ResponseEntity<AsignacionEmpleado> crear(@RequestBody AsignacionEmpleado asignacion) {
+    public ResponseEntity<AsignacionEmpleado> crear(@Valid @RequestBody AsignacionEmpleado asignacion) {
         AsignacionEmpleado nuevaAsignacion = asignacionEmpleadoService.crear(asignacion);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaAsignacion);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AsignacionEmpleado> actualizar(@PathVariable Integer id, @RequestBody AsignacionEmpleado asignacion) {
+    public ResponseEntity<AsignacionEmpleado> actualizar(@PathVariable Integer id, @Valid @RequestBody AsignacionEmpleado asignacion) {
         return asignacionEmpleadoService.actualizar(id, asignacion)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());

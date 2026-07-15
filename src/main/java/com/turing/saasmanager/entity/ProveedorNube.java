@@ -1,14 +1,17 @@
 package com.turing.saasmanager.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "proveedor_nube")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProveedorNube {
 
     @Id
@@ -16,9 +19,11 @@ public class ProveedorNube {
     @Column(name = "id_proveedor")
     private Integer idProveedor;
 
+    @NotBlank(message = "El nombre de la plataforma es obligatorio")
     @Column(name = "nombre_plataforma", nullable = false, unique = true, length = 100)
     private String nombrePlataforma;
 
+    @NotBlank(message = "La categoría del servicio es obligatoria")
     @Column(name = "categoria_servicio", nullable = false, length = 50)
     private String categoriaServicio;
 

@@ -2,6 +2,7 @@ package com.turing.saasmanager.entity;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,9 +12,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "licencia_software")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class LicenciaSoftware {
 
     @Id
@@ -21,16 +26,23 @@ public class LicenciaSoftware {
     @Column(name = "id_licencia")
     private Integer idLicencia;
 
+    @NotNull(message = "El proveedor es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProveedorNube proveedor;
 
+    @NotBlank(message = "El tipo de plan es obligatorio")
     @Column(name = "tipo_plan", nullable = false, length = 100)
     private String tipoPlan;
 
+    @NotNull(message = "El costo mensual es obligatorio")
+    @Positive(message = "El costo mensual debe ser mayor a 0")
     @Column(name = "costo_mensual", nullable = false, precision = 10, scale = 2)
     private BigDecimal costoMensual;
 
+    @NotNull(message = "Los asientos totales son obligatorios")
+    @Positive(message = "El número de asientos totales debe ser mayor a 0")
     @Column(name = "asientos_totales", nullable = false)
     private Integer asientosTotales;
 
