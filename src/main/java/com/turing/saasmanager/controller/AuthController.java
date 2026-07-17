@@ -1,6 +1,5 @@
 package com.turing.saasmanager.controller;
 
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,8 +22,11 @@ import com.turing.saasmanager.exception.ResourceAlreadyExistsException;
 import com.turing.saasmanager.repository.UsuarioRepository;
 import com.turing.saasmanager.security.JwtUtils;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/auth")
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -44,15 +47,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generarToken(authentication);
+        // Subject debe ser email: CustomUserDetailsService busca por email, no por username.
+        String jwt = jwtUtils.generarTokenDesdeUsername(loginRequest.getEmail());
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String rol = userDetails.getAuthorities().isEmpty() ? "ROLE_USER" : userDetails.getAuthorities().iterator().next().getAuthority();
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), rol));
+        // El email es el identificador usado para autenticarse
+        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), loginRequest.getEmail(), rol));
     }
 
     @PostMapping("/register")
@@ -60,9 +65,13 @@ public class AuthController {
         if (usuarioRepository.existsByUsername(registerRequest.getUsername())) {
             throw new ResourceAlreadyExistsException("El nombre de usuario '" + registerRequest.getUsername() + "' ya existe.");
         }
+        if (usuarioRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new ResourceAlreadyExistsException("El correo '" + registerRequest.getEmail() + "' ya está registrado.");
+        }
 
         Usuario usuario = new Usuario(
                 registerRequest.getUsername(),
+                registerRequest.getEmail(),
                 passwordEncoder.encode(registerRequest.getPassword()),
                 registerRequest.getRol()
         );

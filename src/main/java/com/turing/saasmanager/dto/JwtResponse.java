@@ -5,14 +5,16 @@ public class JwtResponse {
     private String token;
     private String type = "Bearer";
     private String username;
+    private String email;
     private String rol;
 
     public JwtResponse() {
     }
 
-    public JwtResponse(String token, String username, String rol) {
+    public JwtResponse(String token, String username, String email, String rol) {
         this.token = token;
         this.username = username;
+        this.email = email;
         this.rol = rol;
     }
 
@@ -38,6 +40,14 @@ public class JwtResponse {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getRol() {

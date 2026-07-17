@@ -43,10 +43,10 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
         if (usuarioRepository.count() == 0) {
-            Usuario admin = new Usuario("admin", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
-            Usuario user = new Usuario("carlos.martinez@empresa.com", passwordEncoder.encode("user123"), "ROLE_USER");
+            Usuario admin = new Usuario("admin", "admin@saasmanager.com", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
+            Usuario user = new Usuario("carlos.martinez", "carlos.martinez@empresa.com", passwordEncoder.encode("user123"), "ROLE_USER");
             usuarioRepository.saveAll(Arrays.asList(admin, user));
-            System.out.println("Usuarios iniciales cargados en la base de datos (admin/admin123 y carlos.martinez@empresa.com/user123).");
+            System.out.println("Usuarios iniciales cargados en la base de datos (admin/admin123 y carlos.martinez/user123).");
         }
 
         if (proveedorRepository.count() > 0) {
@@ -76,24 +76,32 @@ public class DataInitializer implements CommandLineRunner {
         licAws.setTipoPlan("AWS Enterprise Support & Compute Pack");
         licAws.setCostoMensual(new BigDecimal("2500.00"));
         licAws.setAsientosTotales(25);
+        licAws.setEstado("ACTIVA");
+        licAws.setFechaVencimiento("2026-06-30");
 
         LicenciaSoftware licGcp = new LicenciaSoftware();
         licGcp.setProveedor(gcp);
         licGcp.setTipoPlan("Google Workspace Enterprise Plus");
         licGcp.setCostoMensual(new BigDecimal("1200.50"));
         licGcp.setAsientosTotales(100);
+        licGcp.setEstado("ACTIVA");
+        licGcp.setFechaVencimiento("2026-09-01");
 
         LicenciaSoftware licAzure = new LicenciaSoftware();
         licAzure.setProveedor(azure);
         licAzure.setTipoPlan("Microsoft 365 E5 & Azure AD Premium");
         licAzure.setCostoMensual(new BigDecimal("1850.00"));
         licAzure.setAsientosTotales(80);
+        licAzure.setEstado("ACTIVA");
+        licAzure.setFechaVencimiento("2026-12-31");
 
         LicenciaSoftware licGithub = new LicenciaSoftware();
         licGithub.setProveedor(github);
         licGithub.setTipoPlan("GitHub Enterprise Cloud + Copilot");
         licGithub.setCostoMensual(new BigDecimal("950.00"));
         licGithub.setAsientosTotales(40);
+        licGithub.setEstado("ACTIVA");
+        licGithub.setFechaVencimiento("2026-03-15");
 
         licenciaRepository.saveAll(Arrays.asList(licAws, licGcp, licAzure, licGithub));
 

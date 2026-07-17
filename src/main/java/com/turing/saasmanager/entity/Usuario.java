@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -22,6 +23,11 @@ public class Usuario {
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
+    @NotBlank(message = "El correo electrónico es obligatorio")
+    @Email(message = "El formato del correo electrónico no es válido")
+    @Column(name = "email", nullable = false, unique = true, length = 150)
+    private String email;
+
     @NotBlank(message = "La contraseña es obligatoria")
     @JsonIgnore
     @Column(name = "password", nullable = false, length = 255)
@@ -34,8 +40,9 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Usuario(String username, String password, String rol) {
+    public Usuario(String username, String email, String password, String rol) {
         this.username = username;
+        this.email = email;
         this.password = password;
         this.rol = rol;
     }
@@ -54,6 +61,14 @@ public class Usuario {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {

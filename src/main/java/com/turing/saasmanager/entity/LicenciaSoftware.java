@@ -46,16 +46,24 @@ public class LicenciaSoftware {
     @Column(name = "asientos_totales", nullable = false)
     private Integer asientosTotales;
 
+    @Column(name = "estado", length = 30)
+    private String estado = "ACTIVA";
+
+    @Column(name = "fecha_vencimiento", length = 50)
+    private String fechaVencimiento = "2026-12-31";
+
     public LicenciaSoftware() {
     }
 
     public LicenciaSoftware(Integer idLicencia, ProveedorNube proveedor, String tipoPlan, BigDecimal costoMensual,
-            Integer asientosTotales) {
+            Integer asientosTotales, String estado, String fechaVencimiento) {
         this.idLicencia = idLicencia;
         this.proveedor = proveedor;
         this.tipoPlan = tipoPlan;
         this.costoMensual = costoMensual;
         this.asientosTotales = asientosTotales;
+        this.estado = estado;
+        this.fechaVencimiento = fechaVencimiento;
     }
 
     public Integer getIdLicencia() {
@@ -96,5 +104,21 @@ public class LicenciaSoftware {
 
     public void setAsientosTotales(Integer asientosTotales) {
         this.asientosTotales = asientosTotales;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getFechaVencimiento() {
+        return fechaVencimiento;
+    }
+
+    public void setFechaVencimiento(String fechaVencimiento) {
+        this.fechaVencimiento = fechaVencimiento;
     }
 }

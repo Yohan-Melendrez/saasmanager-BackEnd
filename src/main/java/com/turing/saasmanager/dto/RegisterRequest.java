@@ -1,11 +1,16 @@
 package com.turing.saasmanager.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public class RegisterRequest {
 
     @NotBlank(message = "El nombre de usuario es obligatorio")
     private String username;
+
+    @NotBlank(message = "El correo electrónico es obligatorio")
+    @Email(message = "El formato del correo electrónico no es válido")
+    private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
@@ -15,8 +20,9 @@ public class RegisterRequest {
     public RegisterRequest() {
     }
 
-    public RegisterRequest(String username, String password, String rol) {
+    public RegisterRequest(String username, String email, String password, String rol) {
         this.username = username;
+        this.email = email;
         this.password = password;
         if (rol != null && !rol.isBlank()) {
             this.rol = rol;
@@ -29,6 +35,14 @@ public class RegisterRequest {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {

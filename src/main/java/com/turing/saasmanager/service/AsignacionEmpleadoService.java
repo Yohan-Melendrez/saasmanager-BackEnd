@@ -31,6 +31,11 @@ public class AsignacionEmpleadoService {
     }
 
     @Transactional(readOnly = true)
+    public List<AsignacionEmpleado> obtenerPorCorreoEmpleado(String correoEmpleado) {
+        return asignacionEmpleadoRepository.findByCorreoEmpleado(correoEmpleado);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<AsignacionEmpleado> obtenerPorId(Integer id) {
         AsignacionEmpleado asignacion = asignacionEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("La asignación con ID " + id + " no existe."));

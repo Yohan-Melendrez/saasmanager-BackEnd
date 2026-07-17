@@ -66,6 +66,12 @@ public class LicenciaSoftwareService {
         licenciaExistente.setTipoPlan(licenciaActualizada.getTipoPlan());
         licenciaExistente.setCostoMensual(licenciaActualizada.getCostoMensual());
         licenciaExistente.setAsientosTotales(licenciaActualizada.getAsientosTotales());
+        if (licenciaActualizada.getEstado() != null) {
+            licenciaExistente.setEstado(licenciaActualizada.getEstado());
+        }
+        if (licenciaActualizada.getFechaVencimiento() != null) {
+            licenciaExistente.setFechaVencimiento(licenciaActualizada.getFechaVencimiento());
+        }
         return Optional.of(licenciaSoftwareRepository.save(licenciaExistente));
     }
 

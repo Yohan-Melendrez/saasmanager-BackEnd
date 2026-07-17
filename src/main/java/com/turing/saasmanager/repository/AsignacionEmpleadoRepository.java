@@ -8,4 +8,6 @@ import com.turing.saasmanager.entity.AsignacionEmpleado;
 public interface AsignacionEmpleadoRepository extends JpaRepository<AsignacionEmpleado, Integer> {
     boolean existsByLicenciaIdLicenciaAndCorreoEmpleadoAndEstatusActivoTrue(Integer idLicencia, String correoEmpleado);
     List<AsignacionEmpleado> findByCorreoEmpleado(String correoEmpleado);
+    List<AsignacionEmpleado> findByLicenciaIdLicencia(Integer idLicencia);
+    long countByLicenciaProveedorIdProveedor(Integer idProveedor);
 }

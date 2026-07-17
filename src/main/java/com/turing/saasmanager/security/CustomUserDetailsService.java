@@ -22,9 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // El login se realiza exclusivamente con el correo electrónico
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Usuario no encontrado con el correo: " + email));
 
         return new User(usuario.getUsername(),
                 usuario.getPassword(),
