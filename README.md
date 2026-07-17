@@ -19,7 +19,6 @@ El sistema administra el inventario de proveedores en la nube (AWS, Google Cloud
 
 ## Deploy local — guía paso a paso
 
-> Esta guía cubre los cambios recientes: campo `email` en la tabla `usuario`, login exclusivo por correo y endpoints de edición de perfil.
 
 ### Requisitos previos
 
