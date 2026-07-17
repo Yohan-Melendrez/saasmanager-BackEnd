@@ -53,7 +53,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/error").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
                 );
 
@@ -66,7 +66,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        // SE INCLUYE EL DOMINIO DE VERCEL Y EL LOCALHOST
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "https://saasmanager.vercel.app"
+        ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
