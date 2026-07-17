@@ -15,62 +15,118 @@ El sistema administra el inventario de proveedores en la nube (AWS, Google Cloud
 - JJWT 0.12.6 (JSON Web Tokens)
 - Maven (wrapper `mvnw` / `mvnw.cmd` incluido, no requiere Maven instalado globalmente)
 
-## Requisitos previos
+---
 
-- JDK 17
-- Servidor MySQL en ejecución (por defecto puerto `3306`)
-- No requiere Maven instalado: usar el wrapper incluido (`./mvnw` o `.\mvnw.cmd`)
+## Deploy local — guía paso a paso
 
-## Instalación
+> Esta guía cubre los cambios recientes: campo `email` en la tabla `usuario`, login exclusivo por correo y endpoints de edición de perfil.
+
+### Requisitos previos
+
+| Herramienta | Versión mínima | Verificar con |
+|---|---|---|
+| JDK | 17 | `java -version` |
+| MySQL | 8.x | `mysql --version` |
+| Maven | No requerido | Se usa el wrapper del proyecto |
+
+---
+
+### Paso 1 — Clonar el repositorio
 
 ```bash
 git clone <url-del-repositorio>
 cd saasmanager-BackEnd
 ```
 
-### 1. Preparar la base de datos
+---
+
+### Paso 2 — Preparar la base de datos
+
+Conectate a MySQL y crea la base de datos si no existe:
 
 ```sql
-CREATE DATABASE saas_manager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS saas_manager
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 ```
 
-El esquema de tablas se crea/actualiza automáticamente al arrancar (`spring.jpa.hibernate.ddl-auto=update`) a partir de las entidades JPA — no hace falta correr DDL a mano. Si querés datos de prueba, el archivo `datos_dummy.sql` en la raíz del repo tiene inserts opcionales para `proveedor_nube`, `licencia_software` y `asignacion_empleado` (no incluye usuarios; esos se crean vía `POST /api/v1/auth/register`).
+> **No es necesario crear tablas ni correr DDL a mano.**
+> Hibernate las crea y actualiza automáticamente al arrancar la aplicación gracias a `spring.jpa.hibernate.ddl-auto=update`.
 
-### 2. Configurar variables de entorno
+---
 
-La configuración vive en `src/main/resources/application.properties`. Los valores por defecto (para desarrollo local) son:
+### Paso 3 — Migración de la columna `email` (solo si ya tenías datos)
 
-| Propiedad | Variable de entorno equivalente | Default |
-|---|---|---|
-| `spring.datasource.url` | `SPRING_DATASOURCE_URL` | `jdbc:mysql://localhost:3306/saas_manager?useSSL=false&serverTimezone=UTC` |
-| `spring.datasource.username` | `SPRING_DATASOURCE_USERNAME` | `root` |
-| `spring.datasource.password` | `SPRING_DATASOURCE_PASSWORD` | `root` |
-| `server.port` | `SERVER_PORT` | `8081` |
-| `jwt.secret` | `JWT_SECRET` | clave hardcodeada de desarrollo en `JwtUtils.java` (cambiar en producción) |
-| `jwt.expiration` | `JWT_EXPIRATION` | `86400000` (ms = 24h) |
+Si es la **primera vez** que levantás el proyecto, podés saltarte este paso — Hibernate creará la columna `email` sola.
 
-`jwt.secret` y `jwt.expiration` no están declaradas en `application.properties`; usan el default de `@Value("${jwt.secret:...}")` en `JwtUtils.java` si no se sobreescriben. Para producción, definilas explícitamente (por variable de entorno o en `application.properties`) — **no** uses el secreto de desarrollo incluido en el código.
+Si ya tenías la tabla `usuario` con registros previos (**sin** la columna `email`), deberás agregarla manualmente antes de arrancar para evitar el error `NOT NULL constraint failed`:
 
-Spring Boot mapea variables de entorno a propiedades automáticamente (relaxed binding), así que alcanza con exportarlas antes de levantar el proceso:
+```sql
+USE saas_manager;
 
+-- 1. Agregar la columna permitiendo NULL temporalmente
+ALTER TABLE usuario
+  ADD COLUMN email VARCHAR(150) NULL UNIQUE AFTER username;
+
+-- 2. Asignar un email provisional a los registros existentes
+--    (reemplazá los valores según corresponda)
+UPDATE usuario SET email = 'admin@saasmanager.com'     WHERE username = 'admin';
+UPDATE usuario SET email = 'usuario@saasmanager.com'   WHERE username != 'admin';
+
+-- 3. Ahora que todos tienen email, volvelo obligatorio
+ALTER TABLE usuario
+  MODIFY COLUMN email VARCHAR(150) NOT NULL;
+```
+
+---
+
+### Paso 4 — Configurar la conexión a la base de datos
+
+Editá `src/main/resources/application.properties` con tus credenciales de MySQL:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/saas_manager?useSSL=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=TU_PASSWORD_AQUI
+```
+
+Alternativamente podés usar variables de entorno sin tocar el archivo (Spring Boot las mapea automáticamente):
+
+**Linux / macOS:**
 ```bash
 export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/saas_manager?useSSL=false&serverTimezone=UTC"
 export SPRING_DATASOURCE_USERNAME=root
 export SPRING_DATASOURCE_PASSWORD=tu_password
-export JWT_SECRET=una_clave_larga_y_secreta
-export JWT_EXPIRATION=86400000
+export JWT_SECRET=una_clave_larga_y_secreta_para_produccion
 ```
 
-En Windows PowerShell: `$env:SPRING_DATASOURCE_PASSWORD = "tu_password"`.
+**Windows PowerShell:**
+```powershell
+$env:SPRING_DATASOURCE_URL     = "jdbc:mysql://localhost:3306/saas_manager?useSSL=false&serverTimezone=UTC"
+$env:SPRING_DATASOURCE_USERNAME = "root"
+$env:SPRING_DATASOURCE_PASSWORD = "tu_password"
+$env:JWT_SECRET                 = "una_clave_larga_y_secreta_para_produccion"
+```
 
-El origen CORS permitido (`http://localhost:4200`) está hardcodeado en `SecurityConfig.java` — no es configurable por variable de entorno; si el frontend corre en otro origen, hay que editarlo ahí.
+Todas las propiedades disponibles:
 
-## Comandos de ejecución
+| Propiedad | Variable de entorno | Default |
+|---|---|---|
+| `spring.datasource.url` | `SPRING_DATASOURCE_URL` | `jdbc:mysql://localhost:3306/saas_manager?...` |
+| `spring.datasource.username` | `SPRING_DATASOURCE_USERNAME` | `root` |
+| `spring.datasource.password` | `SPRING_DATASOURCE_PASSWORD` | `root` |
+| `server.port` | `SERVER_PORT` | `8081` |
+| `jwt.secret` | `JWT_SECRET` | clave de desarrollo en `JwtUtils.java` |
+| `jwt.expiration` | `JWT_EXPIRATION` | `86400000` (ms = 24 h) |
 
-Desde la raíz del proyecto:
+> ⚠️ **Producción:** nunca uses el secreto JWT de desarrollo hardcodeado en el código. Siempre sobreescribilo con una variable de entorno.
+
+---
+
+### Paso 5 — Levantar la aplicación
 
 **Windows:**
-```bash
+```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -79,26 +135,74 @@ Desde la raíz del proyecto:
 ./mvnw spring-boot:run
 ```
 
-La API queda disponible en `http://localhost:8081` cuando la consola muestra `Started SaasmanagerApplication`.
+La aplicación está lista cuando la consola muestra:
 
-### Compilar sin ejecutar
-
-```bash
-./mvnw clean compile
+```
+Started SaasmanagerApplication in X.XXX seconds
 ```
 
-### Generar el JAR
+La API queda disponible en: **`http://localhost:8081`**
+
+---
+
+### Paso 6 — Verificar que todo funciona
+
+Al arrancar por primera vez, el `DataInitializer` carga automáticamente dos usuarios de prueba si la tabla `usuario` está vacía:
+
+| Username | Email | Contraseña | Rol |
+|---|---|---|---|
+| `admin` | `admin@saasmanager.com` | `admin123` | `ROLE_ADMIN` |
+| `carlos.martinez` | `carlos.martinez@empresa.com` | `user123` | `ROLE_USER` |
+
+Probá el login con curl o cualquier cliente REST (Postman, Insomnia, etc.):
 
 ```bash
+# Login como admin
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@saasmanager.com", "password": "admin123"}'
+```
+
+Respuesta esperada:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "type": "Bearer",
+  "username": "admin",
+  "email": "admin@saasmanager.com",
+  "rol": "ROLE_ADMIN"
+}
+```
+
+Guardá el `token` para usarlo en las peticiones protegidas:
+
+```bash
+# Ver tu perfil
+curl http://localhost:8081/api/v1/users/me \
+  -H "Authorization: Bearer <token>"
+
+# Listar proveedores (solo ADMIN)
+curl http://localhost:8081/api/v1/proveedores \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### Otros comandos útiles
+
+```bash
+# Solo compilar (sin ejecutar)
+./mvnw clean compile
+
+# Generar el JAR ejecutable
 ./mvnw clean package
 java -jar target/saasmanager-0.0.1-SNAPSHOT.jar
-```
 
-### Tests
-
-```bash
+# Correr los tests
 ./mvnw test
 ```
+
+---
 
 ## Arquitectura
 
@@ -110,36 +214,55 @@ com.turing.saasmanager
  ├── entity/       # Mapeo ORM
  ├── dto/          # Request/response DTOs
  ├── security/     # JWT (filtro, utils) y UserDetailsService
+ ├── config/       # DataInitializer (datos de prueba)
  └── exception/    # Excepciones de dominio + GlobalExceptionHandler
 ```
+
+---
 
 ## Autenticación y autorización
 
 - `POST /api/v1/auth/login` y `POST /api/v1/auth/register` son públicos; todo lo demás requiere `Authorization: Bearer <token>`.
-- El JWT se firma con el email del usuario como subject (`CustomUserDetailsService` busca siempre por email).
-- Roles: `ROLE_ADMIN`, `ROLE_USER`. Se asignan vía `@PreAuthorize("hasRole('ADMIN')")` a nivel de clase o método.
+- El login se realiza **exclusivamente con el correo electrónico** (`email` + `password`).
+- El JWT usa el `username` como subject; `CustomUserDetailsService` busca al usuario por `email` al autenticar.
+- Roles: `ROLE_ADMIN`, `ROLE_USER`. Controlados con `@PreAuthorize("hasRole('ADMIN')")`.
 - `/api/v1/proveedores/**` y `/api/v1/licencias/**`: solo `ROLE_ADMIN`.
-- `/api/v1/asignaciones` (GET lista): `ROLE_ADMIN` ve todas; `ROLE_USER` solo las propias (filtradas por su email). Crear/editar/eliminar/ver por ID: solo `ROLE_ADMIN`.
+- `/api/v1/asignaciones` (GET lista): `ROLE_ADMIN` ve todas; `ROLE_USER` solo las propias (filtradas por su email).
 - `/api/v1/users/me`: cualquier autenticado, solo su propio perfil. `/api/v1/users/{id}`: solo `ROLE_ADMIN`.
+
+---
 
 ## Referencia de endpoints
 
-Todas las respuestas son JSON. Errores siguen el formato `ErrorResponse`: `{ timestamp, status, error, mensaje, path, detalles? }`.
+Todas las respuestas son JSON. Los errores siguen el formato `ErrorResponse`:
+```json
+{ "timestamp": "...", "status": 400, "error": "Bad Request", "mensaje": "...", "path": "..." }
+```
 
 ### Auth (`/api/v1/auth`) — público
 
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
 | POST | `/login` | `{ email, password }` | Devuelve `{ token, type, username, email, rol }` |
-| POST | `/register` | `{ username, email, password, rol? }` | Crea usuario (`rol` default `ROLE_USER`). `201 Created` |
+| POST | `/register` | `{ username, email, password, rol? }` | Crea usuario. `rol` default `ROLE_USER`. Retorna `201 Created` |
 
 ### Usuarios (`/api/v1/users`) — autenticado
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | GET | `/me` | Propio | Perfil del usuario autenticado |
-| PUT | `/me` | Propio | Edita `username`/`email`/`password` (requiere `passwordActual` para cambiar `passwordNuevo`) |
+| PUT | `/me` | Propio | Edita `username` / `email` / `passwordNuevo` (requiere `passwordActual` para cambiar contraseña) |
 | PUT | `/{id}` | ADMIN | Edita cualquier usuario, incluido `rol` |
+
+**Body para `PUT /me`** — todos los campos son opcionales, solo se actualizan los enviados:
+```json
+{
+  "username":       "nuevo.nombre",
+  "email":          "nuevo@empresa.com",
+  "passwordActual": "claveAnterior",
+  "passwordNuevo":  "claveNueva123"
+}
+```
 
 ### Proveedores (`/api/v1/proveedores`) — solo ADMIN
 
@@ -150,7 +273,7 @@ Todas las respuestas son JSON. Errores siguen el formato `ErrorResponse`: `{ tim
 | GET | `/{id}/dependencias` | `{ licencias, asignaciones }` asociadas |
 | POST | `/` | Crear (`201`) |
 | PUT | `/{id}` | Actualizar (`200` / `404`) |
-| DELETE | `/{id}?cascada=false` | Eliminar. Si tiene licencias asociadas y `cascada=false` → `409`. Con `cascada=true` borra en cascada licencias y sus asignaciones. |
+| DELETE | `/{id}?cascada=false` | Eliminar. Si tiene licencias y `cascada=false` → `409`. Con `cascada=true` borra en cascada. |
 
 ### Licencias (`/api/v1/licencias`) — solo ADMIN
 
@@ -172,6 +295,8 @@ Todas las respuestas son JSON. Errores siguen el formato `ErrorResponse`: `{ tim
 | PUT | `/{id}` | ADMIN | Modificar asignación |
 | DELETE | `/{id}` | ADMIN | Eliminar |
 
+---
+
 ## Ejemplos de peticiones HTTP
 
 **Registrar usuario:**
@@ -186,6 +311,14 @@ curl -X POST http://localhost:8081/api/v1/auth/register \
 curl -X POST http://localhost:8081/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "juan.perez@empresa.com", "password": "claveSegura123"}'
+```
+
+**Editar perfil propio:**
+```bash
+curl -X PUT http://localhost:8081/api/v1/users/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"email": "nuevo.correo@empresa.com", "passwordActual": "claveSegura123", "passwordNuevo": "nuevaClave456"}'
 ```
 
 **Crear un proveedor (requiere token de ADMIN):**
