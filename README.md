@@ -42,7 +42,7 @@ cd saasmanager-BackEnd
 
 ### Paso 2 — Preparar la base de datos
 
-Conectate a MySQL y crea la base de datos si no existe:
+Conéctate a MySQL y crea la base de datos si no existe:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS saas_manager
@@ -57,7 +57,7 @@ CREATE DATABASE IF NOT EXISTS saas_manager
 
 ### Paso 3 — Migración de la columna `email` (solo si ya tenías datos)
 
-Si es la **primera vez** que levantás el proyecto, podés saltarte este paso — Hibernate creará la columna `email` sola.
+Si es la **primera vez** que levantas el proyecto, puedes omitir este paso — Hibernate creará la columna `email` sola.
 
 Si ya tenías la tabla `usuario` con registros previos (**sin** la columna `email`), deberás agregarla manualmente antes de arrancar para evitar el error `NOT NULL constraint failed`:
 
@@ -69,11 +69,11 @@ ALTER TABLE usuario
   ADD COLUMN email VARCHAR(150) NULL UNIQUE AFTER username;
 
 -- 2. Asignar un email provisional a los registros existentes
---    (reemplazá los valores según corresponda)
+--    (reemplaza los valores según corresponda)
 UPDATE usuario SET email = 'admin@saasmanager.com'     WHERE username = 'admin';
 UPDATE usuario SET email = 'usuario@saasmanager.com'   WHERE username != 'admin';
 
--- 3. Ahora que todos tienen email, volvelo obligatorio
+-- 3. Ahora que todos tienen email, vuélvelo obligatorio
 ALTER TABLE usuario
   MODIFY COLUMN email VARCHAR(150) NOT NULL;
 ```
@@ -82,7 +82,7 @@ ALTER TABLE usuario
 
 ### Paso 4 — Configurar la conexión a la base de datos
 
-Editá `src/main/resources/application.properties` con tus credenciales de MySQL:
+Edita `src/main/resources/application.properties` con tus credenciales de MySQL:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/saas_manager?useSSL=false&serverTimezone=UTC
@@ -90,7 +90,7 @@ spring.datasource.username=root
 spring.datasource.password=TU_PASSWORD_AQUI
 ```
 
-Alternativamente podés usar variables de entorno sin tocar el archivo (Spring Boot las mapea automáticamente):
+Alternativamente puedes usar variables de entorno sin tocar el archivo (Spring Boot las mapea automáticamente):
 
 **Linux / macOS:**
 ```bash
@@ -119,7 +119,7 @@ Todas las propiedades disponibles:
 | `jwt.secret` | `JWT_SECRET` | clave de desarrollo en `JwtUtils.java` |
 | `jwt.expiration` | `JWT_EXPIRATION` | `86400000` (ms = 24 h) |
 
-> ⚠️ **Producción:** nunca uses el secreto JWT de desarrollo hardcodeado en el código. Siempre sobreescribilo con una variable de entorno.
+> ⚠️ **Producción:** nunca uses el secreto JWT de desarrollo hardcodeado en el código. Siempre sobrescríbelo con una variable de entorno.
 
 ---
 
@@ -154,7 +154,7 @@ Al arrancar por primera vez, el `DataInitializer` carga automáticamente dos usu
 | `admin` | `admin@saasmanager.com` | `admin123` | `ROLE_ADMIN` |
 | `carlos.martinez` | `carlos.martinez@empresa.com` | `user123` | `ROLE_USER` |
 
-Probá el login con curl o cualquier cliente REST (Postman, Insomnia, etc.):
+Prueba el login con curl o cualquier cliente REST (Postman, Insomnia, etc.):
 
 ```bash
 # Login como admin
@@ -174,7 +174,7 @@ Respuesta esperada:
 }
 ```
 
-Guardá el `token` para usarlo en las peticiones protegidas:
+Guarda el `token` para usarlo en las peticiones protegidas:
 
 ```bash
 # Ver tu perfil
