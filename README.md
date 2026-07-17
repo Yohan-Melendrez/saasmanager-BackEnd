@@ -56,11 +56,8 @@ CREATE DATABASE IF NOT EXISTS saas_manager
 
 ### Paso 3 — Migración de la columna `email` (solo si ya tenías datos)
 
-<<<<<<< HEAD
-Si es la **primera vez** que levantas el proyecto, puedes omitir este paso — Hibernate creará la columna `email` sola.
-=======
 Si es la **primera vez** que levantás el proyecto, puedes saltarte este paso — Hibernate creará la columna `email` sola.
->>>>>>> fcef8f1618d204c897233d122079b1565cba6113
+
 
 Si ya tenías la tabla `usuario` con registros previos (**sin** la columna `email`), deberás agregarla manualmente antes de arrancar para evitar el error `NOT NULL constraint failed`:
 
