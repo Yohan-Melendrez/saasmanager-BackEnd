@@ -6,7 +6,7 @@
 .DS_Store
 Thumbs.db
 *.log
-
+oracleJdk-27/
 ### Maven / Target ###
 target/
 .mvn/wrapper/maven-wrapper.jar
